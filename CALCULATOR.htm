@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Mortgage Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mortgage Calculator</h1>
+        <label for="propertyPrice">Property Price</label>
+        <input type="number" id="propertyPrice" placeholder="e.g. 400000">
+
+        <label for="depositPercent">Deposit Percentage (%)</label>
+        <input type="number" id="depositPercent" placeholder="e.g. 20">
+
+        <label for="interestRate">Annual Interest Rate (%)</label>
+        <input type="number" id="interestRate" placeholder="e.g. 3.5">
+
+        <label for="loanTerm">Loan Term (Years)</label>
+        <input type="number" id="loanTerm" placeholder="e.g. 30">
+
+        <label for="overpayment">Monthly Overpayment (Optional)</label>
+        <input type="number" id="overpayment" placeholder="e.g. 100">
+
+        <button onclick="calculateMortgage()">Calculate</button>
+
+        <div class="result">
+            <h2>Results</h2>
+            <p id="monthlyPayment">Monthly Payment: </p>
+            <p id="totalPayment">Total Payment: </p>
+            <p id="totalInterest">Total Interest Paid: </p>
+
+            <h3>Amortization Schedule</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Payment</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="amortizationSchedule">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function calculateMortgage() {
+            // Get user inputs
+            const propertyPrice = parseFloat(document.getElementById('propertyPrice').value);
+            const depositPercent = parseFloat(document.getElementById('depositPercent').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+            const loanTerm = parseFloat(document.getElementById('loanTerm').value) * 12; // Convert years to months
+            const overpayment = parseFloat(document.getElementById('overpayment').value) || 0;
+
+            // Calculate principal
+            const depositAmount = propertyPrice * (depositPercent / 100);
+            const principal = propertyPrice - depositAmount;
+
+            // Monthly interest rate
+            const monthlyInterestRate = interestRate / 12;
+
+            // Calculate monthly payment (without overpayment)
+            const monthlyPayment = (principal * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -loanTerm));
+            const totalMonthlyPayment = monthlyPayment + overpayment;
+
+            // Initialize variables for amortization schedule
+            let balance = principal;
+            let totalInterestPaid = 0;
+            let amortizationSchedule = '';
+            let totalPayment = 0;
+
+            for (let i = 1; i <= loanTerm; i++) {
+                const interestPayment = balance * monthlyInterestRate;
+                const principalPayment = totalMonthlyPayment - interestPayment;
+
+                totalInterestPaid += interestPayment;
+                balance -= principalPayment;
+                totalPayment += totalMonthlyPayment;
+
+                if (balance < 0) {
+                    balance = 0;
+                }
+
+                amortizationSchedule += `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${totalMonthlyPayment.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}</td>
+                	<td>${principalPayment.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}</td>
+                	<td>${interestPayment.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}</td>
+                	<td>${balance.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}</td>
+                    </tr>
+                `;
+
+                // Stop if balance is paid off
+                if (balance <= 0) {
+                    break;
+                }
+            }
+
+            // Display results
+            document.getElementById('monthlyPayment').innerText = `Monthly Payment: ${totalMonthlyPayment.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}`;
+	    document.getElementById('totalPayment').innerText = `Total Payment: ${totalPayment.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}`;
+	    document.getElementById('totalInterest').innerText = `Total Interest Paid: ${totalInterestPaid.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'})}`;
+	    document.getElementById('amortizationSchedule').innerHTML = amortizationSchedule;
+        }
+    </script>
+</body>
+</html>
